@@ -21,6 +21,7 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+//add metadata
 export const metadata: Metadata = {
   title: "Horizon",
   description: "Horizon is a modern banking platform for everyone",

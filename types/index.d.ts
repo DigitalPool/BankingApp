@@ -149,7 +149,7 @@ declare interface BankInfoProps {
 }
 
 declare interface HeaderBoxProps {
-  type?: "title" | "greeting";
+  type?: "title" | "greeting"; //question mark means it is optional
   title: string;
   subtext: string;
   user?: string;
