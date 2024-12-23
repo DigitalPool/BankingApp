@@ -1,4 +1,4 @@
-Here's a simplified and more concise version of the README for your banking app repository:
+Here’s a fully **copyable** version of the README:
 
 ---
 
@@ -7,9 +7,17 @@ Here's a simplified and more concise version of the README for your banking app 
 A comprehensive banking platform built with **Next.js**, **TypeScript**, **TailwindCSS**, and **Appwrite**. This app allows users to manage finances by connecting multiple bank accounts, transferring funds, and tracking transactions seamlessly.
 
 ---
-## Dashboard Screenshot
 
-https://github.com/DigitalPool/BankingApp/blob/main/screenshots/Dashboard.jpg
+## 📸 Screenshots
+
+### Dashboard
+![Dashboard](https://github.com/DigitalPool/BankingApp/blob/main/screenshots/Dashboard.jpg)
+
+### Transactions
+![Transactions Screenshot](https://github.com/DigitalPool/BankingApp/blob/main/screenshots/Transaction%20History.jpg)
+
+### Banks
+![Banks Screenshot](https://github.com/DigitalPool/BankingApp/blob/main/screenshots/My%20Banks.jpg)
 
 ---
 
@@ -32,9 +40,7 @@ https://github.com/DigitalPool/BankingApp/blob/main/screenshots/Dashboard.jpg
 - **Charts**: [Chart.js](https://www.chartjs.org/)
 
 ---
-## Transactions Screenshot
-https://github.com/DigitalPool/BankingApp/blob/main/screenshots/Transaction%20History.jpg
----
+
 ## 🛠️ Quick Start
 
 ### Prerequisites
@@ -48,8 +54,8 @@ Ensure you have the following installed:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/banking.git
-   cd banking
+   git clone https://github.com/DigitalPool/BankingApp.git
+   cd BankingApp
    ```
 
 2. Install dependencies:
@@ -73,17 +79,6 @@ Ensure you have the following installed:
 
 ---
 
-## 📸 Screenshots
-
-![Dashboard](https://example.com/screenshot1.png)
-![Transaction History](https://example.com/screenshot2.png)
-
----
-
-## Banks Screenshot
-https://github.com/DigitalPool/BankingApp/blob/main/screenshots/My%20Banks.jpg
-
----
 ## 🤝 Contributing
 
 We welcome contributions! If you'd like to help improve the app:
@@ -107,4 +102,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-Feel free to customize further based on your project's specifics! Let me know if you'd like additional tweaks.
+Feel free to copy and use this version! Let me know if further tweaks are needed.
