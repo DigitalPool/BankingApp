@@ -8,10 +8,12 @@ import {
   TransferNetwork,
   TransferType,
 } from "plaid";
-import { getBank, getBanks } from "./user.action";
-import { getTransactionsByBankId } from "./transaction.actions";
+
 import { plaidClient } from "../plaid";
 import { parseStringify } from "../utils";
+
+import { getTransactionsByBankId } from "./transaction.actions";
+import { getBanks, getBank } from "./user.actions";
 
 // Get multiple bank accounts
 export const getAccounts = async ({ userId }: getAccountsProps) => {
@@ -43,7 +45,7 @@ export const getAccounts = async ({ userId }: getAccountsProps) => {
           type: accountData.type as string,
           subtype: accountData.subtype! as string,
           appwriteItemId: bank.$id,
-          shareableId: bank.shareableId,
+          sharaebleId: bank.shareableId,
         };
 
         return account;
@@ -113,7 +115,7 @@ export const getAccount = async ({ appwriteItemId }: getAccountProps) => {
     };
 
     // sort transactions by date such that the most recent transaction is first
-    const allTransactions = [...transactions, ...transferTransactions].sort(
+      const allTransactions = [...transactions, ...transferTransactions].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 
