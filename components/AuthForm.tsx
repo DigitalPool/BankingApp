@@ -22,8 +22,11 @@ import { Input } from "@/components/ui/input";
 import CustomInput from "./CustomInput";
 import { authFormSchema } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { getLoggedInUser, signIn, signUp } from "@/lib/actions/user.action";
 
 const AuthForm = ({ type }: { type: string }) => {
+  const router = useRouter(); //coming from next navigation and not next router
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,12 +42,40 @@ const AuthForm = ({ type }: { type: string }) => {
   });
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
     setIsLoading(true);
-    console.log(values);
-    setIsLoading(false);
+    try {
+      // sign up with Appwrite to create a new account & create a plaid link token so we can
+      // start linking our bank account.
+      // we have to figure out if we are signing up or signing in.
+      // thus we have to ensure the user data we collect is in the right format to pass it over
+      // to Appwrite and plaid
+
+      if (type === 'sign-up'){
+        const newUser = await signUp(data);
+        setUser(newUser);
+      }
+      if (type === 'sign-in'){
+        const response = await signIn({
+          email: data.email,
+          password: data.password,
+        })
+      // if we successfully get the response, we want to redirect user to their home page
+      // the line is added in line 28 above
+
+      if (response) router.push('/')
+
+      }
+      console.log(data);
+
+    } catch (error) {
+      console.log(error);
+    } finally {
+      //here do something, whether the user succeeded or not
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -94,6 +125,12 @@ const AuthForm = ({ type }: { type: string }) => {
                   name="address1"
                   label="Address"
                   placeholder="Enter your specific address"
+                />
+                <CustomInput
+                  control={form.control}
+                  name="city"
+                  label="City"
+                  placeholder="Enter your city"
                 />
                 <div className="flex gap-4">
                   <CustomInput
