@@ -7,6 +7,11 @@ Here's a simplified and more concise version of the README for your banking app 
 A comprehensive banking platform built with **Next.js**, **TypeScript**, **TailwindCSS**, and **Appwrite**. This app allows users to manage finances by connecting multiple bank accounts, transferring funds, and tracking transactions seamlessly.
 
 ---
+## Dashboard Screenshot
+
+https://github.com/DigitalPool/BankingApp/blob/main/screenshots/Dashboard.jpg
+
+---
 
 ## 🚀 Features
 
@@ -27,7 +32,9 @@ A comprehensive banking platform built with **Next.js**, **TypeScript**, **Tailw
 - **Charts**: [Chart.js](https://www.chartjs.org/)
 
 ---
-
+## Transactions Screenshot
+https://github.com/DigitalPool/BankingApp/blob/main/screenshots/Transaction%20History.jpg
+---
 ## 🛠️ Quick Start
 
 ### Prerequisites
@@ -73,6 +80,10 @@ Ensure you have the following installed:
 
 ---
 
+## Banks Screenshot
+https://github.com/DigitalPool/BankingApp/blob/main/screenshots/My%20Banks.jpg
+
+---
 ## 🤝 Contributing
 
 We welcome contributions! If you'd like to help improve the app:
