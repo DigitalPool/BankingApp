@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import {Inter} from "next/font/google"
+import {IBM_Plex_Serif, Inter} from "next/font/google"
 import "./globals.css";
-import { Variable } from "lucide-react";
 
-// const inter = Inter({subsets: ["latin"], variable: '--font-inter'});
-// const ibmPlexSerif = IBM_Plex_Serif({
-//   subsets: ['latin'],
-//   wight: ['400', '700'],
-//   Variable: '--font-ibm-plex-serif'
-// })
+const inter = Inter({subsets: ["latin"], variable: '--font-inter'});
+const ibmPlexSerif = IBM_Plex_Serif({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-ibm-plex-serif'
+})
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
