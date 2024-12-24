@@ -1,7 +1,3 @@
-Here’s a fully **copyable** version of the README:
-
----
-
 # 🏦 Fintech Banking App
 
 A comprehensive banking platform built with **Next.js**, **TypeScript**, **TailwindCSS**, and **Appwrite**. This app allows users to manage finances by connecting multiple bank accounts, transferring funds, and tracking transactions seamlessly.
@@ -65,10 +61,30 @@ Ensure you have the following installed:
 
 3. Set up environment variables in a `.env` file:
    ```env
+   # APPWRITE
    NEXT_PUBLIC_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
-   NEXT_PUBLIC_APPWRITE_PROJECT=your_project_id
-   APPWRITE_DATABASE_ID=your_database_id
+   NEXT_PUBLIC_APPWRITE_PROJECT=
+   APPWRITE_DATABASE_ID=
+   APPWRITE_USER_COLLECTION_ID=
+   APPWRITE_BANK_COLLECTION_ID=
+   APPWRITE_TRANSACTION_COLLECTION_ID=
+   NEXT_APPWRITE_KEY=
+
+   # PLAID
+   PLAID_CLIENT_ID=
+   PLAID_SECRET=
+   PLAID_ENV=
+   PLAID_PRODUCTS=
+   PLAID_COUNTRY_CODES=
+
+   # DWOLLA
+   DWOLLA_KEY=
+   DWOLLA_SECRET=
+   DWOLLA_BASE_URL=https://api-sandbox.dwolla.com
+   DWOLLA_ENV=sandbox
    ```
+
+   Replace the placeholders with your actual credentials.
 
 4. Run the development server:
    ```bash
@@ -102,4 +118,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-Feel free to copy and use this version! Let me know if further tweaks are needed.
+Let me know if there’s anything else you’d like to add!
