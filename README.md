@@ -26,6 +26,16 @@ A comprehensive banking platform built with **Next.js**, **TypeScript**, **Tailw
 - **Financial Insights**: Visualize spending across categories and time periods.
 - **Responsive Design**: Optimized for desktop, tablet, and mobile.
 
+
+## TestLogin
+gp1-8
+First_Platypus Bank
+user_gd
+pss_gd
+
+az1-8
+dp1-8
+
 ---
 
 ## ⚙️ Tech Stack
