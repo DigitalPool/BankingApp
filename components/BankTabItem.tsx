@@ -32,6 +32,11 @@ export const BankTabItem = ({ account, appwriteItemId }: BankTabItemProps) => {
       >
         {account.name}
       </p>
+      {account.isStale && (
+        <span className="rounded-full bg-amber-100 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+          Reconnect required
+        </span>
+      )}
     </div>
   );
 };

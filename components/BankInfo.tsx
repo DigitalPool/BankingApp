@@ -58,13 +58,15 @@ const BankInfo = ({ account, appwriteItemId, type }: BankInfoProps) => {
             <p
               className={`text-12 rounded-full px-3 py-1 font-medium text-blue-700 ${colors.subText} ${colors.lightBg}`}
             >
-              {account.subtype}
+              {account.isStale ? "Reconnect required" : account.subtype}
             </p>
           )}
         </div>
 
         <p className={`text-16 font-medium text-blue-700 ${colors.subText}`}>
-          {formatAmount(account.currentBalance)}
+          {account.isStale
+            ? account.statusMessage || "Reconnect this bank to refresh account details."
+            : formatAmount(account.currentBalance)}
         </p>
       </div>
     </div>

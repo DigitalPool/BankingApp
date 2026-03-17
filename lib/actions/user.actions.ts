@@ -16,6 +16,13 @@ const {
   APPWRITE_BANK_COLLECTION_ID: BANK_COLLECTION_ID,
 } = process.env;
 
+const getSessionCookieOptions = () => ({
+  path: "/",
+  httpOnly: true as const,
+  sameSite: "strict" as const,
+  secure: process.env.NODE_ENV === "production",
+});
+
 export const getUserInfo = async ({ userId }: getUserInfoProps) => {
   try {
     const { database } = await createAdminClient();
@@ -26,9 +33,14 @@ export const getUserInfo = async ({ userId }: getUserInfoProps) => {
       [Query.equal('userId', [userId])]
     )
 
+    if (user.total === 0) {
+      return null;
+    }
+
     return parseStringify(user.documents[0]);
   } catch (error) {
     console.log(error)
+    return null;
   }
 }
 
@@ -37,18 +49,14 @@ export const signIn = async ({ email, password }: signInProps) => {
     const { account } = await createAdminClient();
     const session = await account.createEmailPasswordSession(email, password);
 
-    cookies().set("appwrite-session", session.secret, {
-      path: "/",
-      httpOnly: true,
-      sameSite: "strict",
-      secure: true,
-    });
+    cookies().set("appwrite-session", session.secret, getSessionCookieOptions());
 
     const user = await getUserInfo({ userId: session.userId })
 
-    return parseStringify(user);
+    return user;
   } catch (error) {
     console.error('Error', error);
+    return null;
   }
 }
 
@@ -92,16 +100,12 @@ export const signUp = async ({ password, ...userData }: SignUpParams) => {
 
     const session = await account.createEmailPasswordSession(email, password);
 
-    cookies().set("appwrite-session", session.secret, {
-      path: "/",
-      httpOnly: true,
-      sameSite: "strict",
-      secure: true,
-    });
+    cookies().set("appwrite-session", session.secret, getSessionCookieOptions());
 
     return parseStringify(newUser);
   } catch (error) {
     console.error('Error', error);
+    return null;
   }
 }
 
@@ -112,8 +116,12 @@ export async function getLoggedInUser() {
 
     const user = await getUserInfo({ userId: result.$id})
 
-    return parseStringify(user);
+    return user;
   } catch (error) {
+    if (error instanceof Error && error.message === "No session") {
+      return null;
+    }
+
     console.log(error)
     return null;
   }
@@ -151,6 +159,63 @@ export const createLinkToken = async (user: User) => {
   }
 }
 
+export const createReconnectLinkToken = async ({
+  user,
+  bankDocumentId,
+}: {
+  user: User;
+  bankDocumentId: string;
+}) => {
+  try {
+    const bank = await getBank({ documentId: bankDocumentId });
+
+    if (!bank?.accessToken) {
+      throw new Error("No bank access token found for reconnect flow");
+    }
+
+    const tokenParams = {
+      user: {
+        client_user_id: user.$id,
+      },
+      client_name: `${user.firstName} ${user.lastName}`,
+      language: "en",
+      country_codes: ["US"] as CountryCode[],
+      access_token: bank.accessToken,
+    };
+
+    const response = await plaidClient.linkTokenCreate(tokenParams);
+
+    return parseStringify({ linkToken: response.data.link_token });
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+export const completeReconnect = async ({ bankDocumentId }: { bankDocumentId: string }) => {
+  try {
+    const bank = await getBank({ documentId: bankDocumentId });
+
+    if (!bank?.accessToken) {
+      throw new Error("No bank access token found after reconnect");
+    }
+
+    await plaidClient.accountsGet({
+      access_token: bank.accessToken,
+    });
+
+    revalidatePath("/");
+    revalidatePath("/my-banks");
+    revalidatePath("/transaction-history");
+    revalidatePath("/payment-transfer");
+
+    return parseStringify({ success: true });
+  } catch (error) {
+    console.error("Error completing Plaid reconnect:", error);
+    return parseStringify({ success: false });
+  }
+};
+
 export const createBankAccount = async ({
   userId,
   bankId,
@@ -161,6 +226,30 @@ export const createBankAccount = async ({
 }: createBankAccountProps) => {
   try {
     const { database } = await createAdminClient();
+
+    const existingBank = await database.listDocuments(
+      DATABASE_ID!,
+      BANK_COLLECTION_ID!,
+      [Query.equal('accountId', [accountId])]
+    );
+
+    if (existingBank.total > 0) {
+      const updatedBankAccount = await database.updateDocument(
+        DATABASE_ID!,
+        BANK_COLLECTION_ID!,
+        existingBank.documents[0].$id,
+        {
+          userId,
+          bankId,
+          accountId,
+          accessToken,
+          fundingSourceUrl,
+          shareableId,
+        }
+      );
+
+      return parseStringify(updatedBankAccount);
+    }
 
     const bankAccount = await database.createDocument(
       DATABASE_ID!,
@@ -223,7 +312,7 @@ export const exchangePublicToken = async ({
     if (!fundingSourceUrl) throw Error;
 
     // Create a bank account using the user ID, item ID, account ID, access token, funding source URL, and shareableId ID
-    await createBankAccount({
+    const bankAccount = await createBankAccount({
       userId: user.$id,
       bankId: itemId,
       accountId: accountData.account_id,
@@ -231,6 +320,10 @@ export const exchangePublicToken = async ({
       fundingSourceUrl,
       shareableId: encryptId(accountData.account_id),
     });
+
+    if (!bankAccount) {
+      throw new Error("Failed to save linked bank account");
+    }
 
     // Revalidate the path to reflect the changes
     revalidatePath("/");

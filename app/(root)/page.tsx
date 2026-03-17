@@ -4,10 +4,16 @@ import RightSidebar from '@/components/RightSidebar';
 import TotalBalanceBox from '@/components/TotalBalanceBox';
 import { getAccount, getAccounts } from '@/lib/actions/bank.actions';
 import { getLoggedInUser } from '@/lib/actions/user.actions';
+import { redirect } from 'next/navigation';
 
 const Home = async ({ searchParams: { id, page } }: SearchParamProps) => {
   const currentPage = Number(page as string) || 1;
   const loggedIn = await getLoggedInUser();
+
+  if (!loggedIn) {
+    redirect('/sign-in');
+  }
+
   const accounts = await getAccounts({ 
     userId: loggedIn.$id 
   })
@@ -15,9 +21,9 @@ const Home = async ({ searchParams: { id, page } }: SearchParamProps) => {
   if(!accounts) return;
   
   const accountsData = accounts?.data;
+  const hasAccounts = accountsData.length > 0;
   const appwriteItemId = (id as string) || accountsData[0]?.appwriteItemId;
-
-  const account = await getAccount({ appwriteItemId })
+  const account = hasAccounts ? await getAccount({ appwriteItemId }) : null;
 
   return (
     <section className="home">
@@ -37,17 +43,24 @@ const Home = async ({ searchParams: { id, page } }: SearchParamProps) => {
           />
         </header>
 
-        <RecentTransactions 
-          accounts={accountsData}
-          transactions={account?.transactions}
-          appwriteItemId={appwriteItemId}
-          page={currentPage}
-        />
+        {hasAccounts ? (
+          <RecentTransactions 
+            user={loggedIn}
+            accounts={accountsData}
+            transactions={account?.transactions}
+            appwriteItemId={appwriteItemId}
+            page={currentPage}
+          />
+        ) : (
+          <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-sm text-gray-600">
+            No active bank accounts are available right now. If one of your Plaid items expired, reconnect it from the bank linking flow.
+          </div>
+        )}
       </div>
 
       <RightSidebar 
         user={loggedIn}
-        transactions={account?.transactions}
+        transactions={account?.transactions ?? []}
         banks={accountsData?.slice(0, 2)}
       />
     </section>

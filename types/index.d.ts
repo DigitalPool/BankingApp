@@ -60,7 +60,11 @@ declare type Account = {
   type: string;
   subtype: string;
   appwriteItemId: string;
-  shareableId: string;
+  shareableId?: string;
+  sharaebleId?: string;
+  status?: "active" | "reconnect_required";
+  statusMessage?: string;
+  isStale?: boolean;
 };
 
 declare type Transaction = {
@@ -140,6 +144,7 @@ declare type NewDwollaCustomerParams = {
 declare interface CreditCardProps {
   account: Account;
   userName: string;
+  user?: User;
   showBalance?: boolean;
 }
 
@@ -225,6 +230,7 @@ declare interface SiderbarProps {
 }
 
 declare interface RecentTransactionsProps {
+  user: User;
   accounts: Account[];
   transactions: Transaction[];
   appwriteItemId: string;

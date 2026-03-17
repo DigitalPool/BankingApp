@@ -4,13 +4,18 @@ import { BankTabItem } from './BankTabItem'
 import BankInfo from './BankInfo'
 import TransactionsTable from './TransactionsTable'
 import { Pagination } from './Pagination'
+import ReconnectBankButton from './ReconnectBankButton'
 
 const RecentTransactions = ({
+  user,
   accounts,
   transactions = [],
   appwriteItemId,
   page = 1,
 }: RecentTransactionsProps) => {
+  const selectedAccount =
+    accounts.find((account) => account.appwriteItemId === appwriteItemId) ??
+    accounts[0];
   const rowsPerPage = 10;
   const totalPages = Math.ceil(transactions.length / rowsPerPage);
 
@@ -58,10 +63,23 @@ const RecentTransactions = ({
               type="full"
             />
 
-            <TransactionsTable transactions={currentTransactions} />
+            {selectedAccount?.isStale ? (
+              <div className="space-y-4 rounded-xl border border-dashed border-amber-300 bg-amber-50 p-6 text-sm text-amber-800">
+                <p>
+                  This bank record is still saved in the app, but its Plaid connection has expired. Reconnect it to load balances and transaction history again.
+                </p>
+                <ReconnectBankButton
+                  user={user}
+                  bankDocumentId={selectedAccount.appwriteItemId}
+                  className="h-10"
+                />
+              </div>
+            ) : (
+              <TransactionsTable transactions={currentTransactions} />
+            )}
             
 
-            {totalPages > 1 && (
+            {!selectedAccount?.isStale && totalPages > 1 && (
               <div className="my-4 w-full">
                 <Pagination totalPages={totalPages} page={page} />
               </div>

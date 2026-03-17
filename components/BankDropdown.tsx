@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Select,
@@ -21,12 +21,33 @@ export const BankDropdown = ({
 }: BankDropdownProps) => {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [selected, setSeclected] = useState(accounts[0]);
+  const [selected, setSelected] = useState<Account | null>(accounts[0] ?? null);
+
+  useEffect(() => {
+    const queryId = searchParams.get("id");
+    const initialAccount =
+      accounts.find(
+        (account) => account.appwriteItemId === queryId && !account.isStale
+      ) ??
+      accounts.find((account) => !account.isStale) ??
+      accounts[0] ??
+      null;
+
+    setSelected(initialAccount);
+
+    if (setValue && initialAccount) {
+      setValue("senderBank", initialAccount.appwriteItemId);
+    }
+  }, [accounts, searchParams, setValue]);
 
   const handleBankChange = (id: string) => {
     const account = accounts.find((account) => account.appwriteItemId === id)!;
 
-    setSeclected(account);
+    if (account.isStale) {
+      return;
+    }
+
+    setSelected(account);
     const newUrl = formUrlQuery({
       params: searchParams.toString(),
       key: "id",
@@ -41,7 +62,7 @@ export const BankDropdown = ({
 
   return (
     <Select
-      defaultValue={selected.id}
+      value={selected?.appwriteItemId}
       onValueChange={(value) => handleBankChange(value)}
     >
       <SelectTrigger
@@ -53,7 +74,9 @@ export const BankDropdown = ({
           height={20}
           alt="account"
         />
-        <p className="line-clamp-1 w-full text-left">{selected.name}</p>
+        <p className="line-clamp-1 w-full text-left">
+          {selected?.name ?? "Select an account"}
+        </p>
       </SelectTrigger>
       <SelectContent
         className={`w-full bg-white md:w-[300px] ${otherStyles}`}
@@ -67,12 +90,15 @@ export const BankDropdown = ({
             <SelectItem
               key={account.id}
               value={account.appwriteItemId}
+              disabled={account.isStale}
               className="cursor-pointer border-t"
             >
               <div className="flex flex-col ">
                 <p className="text-16 font-medium">{account.name}</p>
-                <p className="text-14 font-medium text-blue-600">
-                  {formatAmount(account.currentBalance)}
+                <p className={`text-14 font-medium ${account.isStale ? "text-amber-700" : "text-blue-600"}`}>
+                  {account.isStale
+                    ? "Reconnect required"
+                    : formatAmount(account.currentBalance)}
                 </p>
               </div>
             </SelectItem>

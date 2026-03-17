@@ -15,6 +15,21 @@ import { parseStringify } from "../utils";
 import { getTransactionsByBankId } from "./transaction.actions";
 import { getBanks, getBank } from "./user.actions";
 
+const isPlaidItemLoginRequiredError = (error: unknown) => {
+  return (
+    !!error &&
+    typeof error === "object" &&
+    "response" in error &&
+    !!error.response &&
+    typeof error.response === "object" &&
+    "data" in error.response &&
+    !!error.response.data &&
+    typeof error.response.data === "object" &&
+    "error_code" in error.response.data &&
+    error.response.data.error_code === "ITEM_LOGIN_REQUIRED"
+  );
+};
+
 // Get multiple bank accounts
 export const getAccounts = async ({ userId }: getAccountsProps) => {
   try {
@@ -22,52 +37,100 @@ export const getAccounts = async ({ userId }: getAccountsProps) => {
     const banks = await getBanks({ userId });
 
     const accounts = await Promise.all(
-      banks?.map(async (bank: Bank) => {
-        // get each account info from plaid
-        const accountsResponse = await plaidClient.accountsGet({
-          access_token: bank.accessToken,
-        });
-        const accountData = accountsResponse.data.accounts[0];
+      (banks ?? []).map(async (bank: Bank) => {
+        try {
+          // get each account info from plaid
+          const accountsResponse = await plaidClient.accountsGet({
+            access_token: bank.accessToken,
+          });
+          const accountData = accountsResponse.data.accounts[0];
 
-        // get institution info from plaid
-        const institution = await getInstitution({
-          institutionId: accountsResponse.data.item.institution_id!,
-        });
+          // get institution info from plaid
+          const institution = await getInstitution({
+            institutionId: accountsResponse.data.item.institution_id!,
+          });
 
-        const account = {
-          id: accountData.account_id,
-          availableBalance: accountData.balances.available!,
-          currentBalance: accountData.balances.current!,
-          institutionId: institution.institution_id,
-          name: accountData.name,
-          officialName: accountData.official_name,
-          mask: accountData.mask!,
-          type: accountData.type as string,
-          subtype: accountData.subtype! as string,
-          appwriteItemId: bank.$id,
-          sharaebleId: bank.shareableId,
-        };
+          const account = {
+            id: accountData.account_id,
+            availableBalance: accountData.balances.available!,
+            currentBalance: accountData.balances.current!,
+            institutionId: institution.institution_id,
+            name: accountData.name,
+            officialName: accountData.official_name,
+            mask: accountData.mask!,
+            type: accountData.type as string,
+            subtype: accountData.subtype! as string,
+            appwriteItemId: bank.$id,
+            shareableId: bank.shareableId,
+            sharaebleId: bank.shareableId,
+            status: "active",
+            statusMessage: "",
+            isStale: false,
+          };
 
-        return account;
+          return account;
+        } catch (error) {
+          if (isPlaidItemLoginRequiredError(error)) {
+            console.warn(
+              `Skipping stale Plaid item for bank document ${bank.$id}; re-link is required.`
+            );
+
+            return {
+              id: bank.accountId,
+              availableBalance: 0,
+              currentBalance: 0,
+              institutionId: "",
+              name: "Linked bank",
+              officialName: "Reconnect required",
+              mask: bank.accountId.slice(-4),
+              type: "depository",
+              subtype: "stale connection",
+              appwriteItemId: bank.$id,
+              shareableId: bank.shareableId,
+              sharaebleId: bank.shareableId,
+              status: "reconnect_required",
+              statusMessage:
+                "This bank connection expired in Plaid and needs to be linked again.",
+              isStale: true,
+            } satisfies Account;
+          }
+
+          throw error;
+        }
       })
     );
 
-    const totalBanks = accounts.length;
-    const totalCurrentBalance = accounts.reduce((total, account) => {
-      return total + account.currentBalance;
+    const validAccounts = (accounts ?? []).filter(Boolean) as Account[];
+
+    const totalBanks = validAccounts.length;
+    const totalCurrentBalance = validAccounts.reduce((total, account) => {
+      return total + (account.isStale ? 0 : account.currentBalance);
     }, 0);
 
-    return parseStringify({ data: accounts, totalBanks, totalCurrentBalance });
+    return parseStringify({
+      data: validAccounts,
+      totalBanks,
+      totalCurrentBalance,
+    });
   } catch (error) {
     console.error("An error occurred while getting the accounts:", error);
+    return parseStringify({ data: [], totalBanks: 0, totalCurrentBalance: 0 });
   }
 };
 
 // Get one bank account
 export const getAccount = async ({ appwriteItemId }: getAccountProps) => {
   try {
+    if (!appwriteItemId) {
+      return parseStringify({ data: null, transactions: [] });
+    }
+
     // get bank from db
     const bank = await getBank({ documentId: appwriteItemId });
+
+    if (!bank) {
+      return parseStringify({ data: null, transactions: [] });
+    }
 
     // get account info from plaid
     const accountsResponse = await plaidClient.accountsGet({
@@ -124,7 +187,12 @@ export const getAccount = async ({ appwriteItemId }: getAccountProps) => {
       transactions: allTransactions,
     });
   } catch (error) {
+    if (isPlaidItemLoginRequiredError(error)) {
+      return parseStringify({ data: null, transactions: [] });
+    }
+
     console.error("An error occurred while getting the account:", error);
+    return parseStringify({ data: null, transactions: [] });
   }
 };
 
@@ -143,6 +211,7 @@ export const getInstitution = async ({
     return parseStringify(intitution);
   } catch (error) {
     console.error("An error occurred while getting the accounts:", error);
+    return [];
   }
 };
 

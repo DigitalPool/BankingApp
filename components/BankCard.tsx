@@ -3,10 +3,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 import Copy from './Copy'
+import ReconnectBankButton from './ReconnectBankButton'
 
-const BankCard = ({ account, userName, showBalance = true }: CreditCardProps) => {
-
-  console.log(account);
+const BankCard = ({ account, userName, user, showBalance = true }: CreditCardProps) => {
   return (
     <div className="flex flex-col">
       <Link href={`/transaction-history/?id=${account.appwriteItemId}`} className="bank-card">
@@ -15,9 +14,15 @@ const BankCard = ({ account, userName, showBalance = true }: CreditCardProps) =>
             <h1 className="text-16 font-semibold text-white">
               {account.name}
             </h1>
-            <p className="font-ibm-plex-serif font-black text-white">
-              {formatAmount(account.currentBalance)}
-            </p>
+            {account.isStale ? (
+              <p className="mt-2 inline-flex w-fit rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white">
+                Reconnect required
+              </p>
+            ) : (
+              <p className="font-ibm-plex-serif font-black text-white">
+                {formatAmount(account.currentBalance)}
+              </p>
+            )}
           </div>
 
           <article className="flex flex-col gap-2">
@@ -30,7 +35,7 @@ const BankCard = ({ account, userName, showBalance = true }: CreditCardProps) =>
               </h2>
             </div>
             <p className="text-14 font-semibold tracking-[1.1px] text-white">
-              ●●●● ●●●● ●●●● <span className="text-16">{account?.mask}</span>
+              ●●●● ●●●● ●●●● <span className="text-16">{account?.mask || "0000"}</span>
             </p>
           </article>
         </div>
@@ -60,7 +65,25 @@ const BankCard = ({ account, userName, showBalance = true }: CreditCardProps) =>
         />
       </Link>
 
-      {showBalance && <Copy title={account?.sharaebleId} />}
+      {showBalance && !account.isStale && account?.sharaebleId && (
+        <Copy title={account.sharaebleId} />
+      )}
+      {account.isStale && (
+        <div className="mt-2 space-y-2">
+          {showBalance && (
+            <p className="text-xs text-gray-600">
+              This linked bank is saved, but its Plaid connection needs to be refreshed.
+            </p>
+          )}
+          {user && (
+            <ReconnectBankButton
+              user={user}
+              bankDocumentId={account.appwriteItemId}
+              className="h-9 w-full"
+            />
+          )}
+        </div>
+      )}
     </div>
   )
 }

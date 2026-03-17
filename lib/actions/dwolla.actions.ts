@@ -35,6 +35,26 @@ export const createFundingSource = async (
       })
       .then((res) => res.headers.get("location"));
   } catch (err) {
+    const duplicateFundingSourceUrl =
+      err &&
+      typeof err === "object" &&
+      "body" in err &&
+      err.body &&
+      typeof err.body === "object" &&
+      "_links" in err.body &&
+      err.body._links &&
+      typeof err.body._links === "object" &&
+      "about" in err.body._links &&
+      err.body._links.about &&
+      typeof err.body._links.about === "object" &&
+      "href" in err.body._links.about
+        ? String(err.body._links.about.href)
+        : null;
+
+    if (duplicateFundingSourceUrl) {
+      return duplicateFundingSourceUrl;
+    }
+
     console.error("Creating a Funding Source Failed: ", err);
   }
 };
